@@ -8,7 +8,7 @@ starting with a throwaway local cluster and adding controls one at a time.
 
 Built in the open, this repo is a work log, not a finished tool.
 
-## Right now
+## Phase 1
 
 A single node [kind](https://kind.sigs.k8s.io/) cluster and one deliberately privileged pod.
 
@@ -69,11 +69,40 @@ being dangerous. That's the gap admission control fills next.
 
 Files: `rbac/`, `workloads/app-pod.yaml`.
 
+## Phase 3 - admission control with Kyverno
+
+Phases 1 and 2 both ended with nothing stopping it. This phase adds the thing that does.
+
+[Kyverno](https://kyverno.io/) is an admission controller. It runs as pods in the cluster and
+intercepts every manifest on its way to the API server, checking it against policies before the
+object is created. RBAC decides whether an identity may perform an action. Admission control
+decides whether the specific object is acceptable. A request has to pass both, so a ServiceAccount
+fully authorised to create pods can still have a privileged pod rejected.
+
+The first policy `policies/disallow-privileged.yaml`, blocks the exact manifest from Phase 1. It
+rejects any pod with `privileged: true` at either the pod or container level. Applying the Phase 1
+privileged pod now returns:
+
+    admission webhook "validate.kyverno.svc-fail" denied the request
+    disallow-privileged: Privileged containers are not allowed.
+
+The same manifest that gave a root shell on the node two phases ago is now refused at admission,
+before it schedules.
+
+`validationFailureAction: Enforce` rejects violations outright. Set to `Audit`, the same policy
+logs violations without blocking. Audit first is the production default, since an enforce policy
+dropped onto a cluster with running workloads can block legitimate deployments before you know what
+breaks. This lab uses Enforce because it is disposable and the rejection is the point.
+
+A policy is only useful if it blocks the bad pod without blocking good ones. A plain
+non privileged pod still creates normally which is where Phase 4 will assert automatically.
+
+Files: `policies/disallow-privileged.yaml`.
+
 ## Where it's going
 
 Rough order, subject to change as I learn what's actually interesting:
 
-3. Kyverno policies that block each of the above at admission
 4. Tests asserting every policy rejects the bad manifest and accepts the fixed one
 5. Mapping the policies back to CIS Kubernetes Benchmark controls
 
