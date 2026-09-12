@@ -1,5 +1,7 @@
 # k8s-policy-lab
 
+![Kyverno Policy Tests](https://github.com/TrailSamuel/k8s-policy-lab/actions/workflows/kyverno-test.yaml/badge.svg)
+
 Learning Kubernetes admission control by building it up from nothing.
 
 The idea: a default cluster will happily run a privileged container that mounts the host
@@ -99,11 +101,29 @@ non privileged pod still creates normally which is where Phase 4 will assert aut
 
 Files: `policies/disallow-privileged.yaml`.
 
+## Phase 4 - automated policy tests in CI
+
+Phase 3 verified the policy by hand: apply a bad pod, watch it get rejected. This phase makes that
+check automatic and repeatable so a broken policy can't pass unnoticed.
+
+The Kyverno CLI runs policy tests without a cluster. A test definition
+(`tests/kyverno-test.yaml`) pairs each policy with sample resources and the result each should
+produce: the compliant pod passes the privileged pod fails admission. Running `kyverno test tests/`
+asserts both.
+
+    Test Summary: 2 tests passed and 0 tests failed
+
+The same test runs in CI on every push. `.github/workflows/kyverno-test.yaml` spins up a clean
+Linux runner, installs the pinned CLI version and runs the suite. If a policy ever stops blocking
+what it should the workflow fails before the change merges. CI first caught a stale action version
+this wa ywhich is the point, a clean machine surfaces problems a local setup hides.
+
+Files: `tests/`, `.github/workflows/kyverno-test.yaml`.
+
 ## Where it's going
 
 Rough order, subject to change as I learn what's actually interesting:
 
-4. Tests asserting every policy rejects the bad manifest and accepts the fixed one
 5. Mapping the policies back to CIS Kubernetes Benchmark controls
 
 ## Note
