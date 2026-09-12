@@ -1,0 +1,22 @@
+name: Kyverno Policy Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-policies:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Kyverno CLI
+        uses: kyverno/action-install-cli@v0.2.1
+        with:
+          release: 'v1.13.4'
+
+      - name: Run policy tests
+        run: kyverno test tests/
