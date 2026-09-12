@@ -120,6 +120,29 @@ this wa ywhich is the point, a clean machine surfaces problems a local setup hid
 
 Files: `tests/`, `.github/workflows/kyverno-test.yaml`.
 
+## Phase 5 - mapping to the CIS Benchmark
+
+The CIS Kubernetes Benchmark is the industry checklist for locking down a cluster. This phase adds
+three more policies so the lab covers a real slice of it then maps each policy to the exact control
+it satisfies.
+
+Three policies join the privileged-pod one from Phase 3:
+
+- `disallow-host-namespaces` blocks pods that share the node's network, process, or IPC space.
+- `disallow-host-path` blocks pods that mount the node's filesystem.
+- `require-run-as-nonroot` blocks pods that run as root.
+
+All four run in the same test suite and the same CI check. Writing the non root policy turned up a
+useful bug: the first version only caught pods that explicitly asked to run as root, and let through
+pods that simply said nothing which is the more common case. The test caught it before it ever
+looked like it was working.
+
+The mapping itself lives in `docs/cis-mapping.md`. Each policy is tied to its CIS control, with the
+benchmark version stated up front, because the control numbers shift between versions and a mapping
+that does not say which version it targets is not worth much.
+
+Files: `policies/`, `tests/`, `docs/cis-mapping.md`.
+
 ## Where it's going
 
 Rough order, subject to change as I learn what's actually interesting:
