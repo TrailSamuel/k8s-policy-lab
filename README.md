@@ -145,9 +145,7 @@ Files: `policies/`, `tests/`, `docs/cis-mapping.md`.
 
 ## Where it's going
 
-Rough order, subject to change as I learn what's actually interesting:
-
-5. Mapping the policies back to CIS Kubernetes Benchmark controls
+Might add some more stuff later
 
 ## Note
 
