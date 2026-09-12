@@ -3,8 +3,14 @@ kind: Pod
 metadata:
   name: good-pod
 spec:
+  hostNetwork: false
+  hostPID: false
+  hostIPC: false
+  securityContext:
+    runAsNonRoot: true
   containers:
     - name: app
       image: nginx:alpine
       securityContext:
         privileged: false
+        runAsNonRoot: true

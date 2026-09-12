@@ -1,22 +1,56 @@
 apiVersion: cli.kyverno.io/v1alpha1
 kind: Test
 metadata:
-  name: disallow-privileged-test
+  name: policy-suite-test
 policies:
   - ../policies/disallow-privileged.yaml
+  - ../policies/disallow-host-namespaces.yaml
+  - ../policies/disallow-host-path.yaml
+  - ../policies/require-run-as-nonroot.yaml
 resources:
   - good-pod.yaml
   - ../workloads/privileged-pod.yaml
+  - bad-host-network.yaml
+  - bad-host-path.yaml
+  - bad-root.yaml
 results:
   - policy: disallow-privileged
     rule: privileged-containers
-    resources:
-      - good-pod
-    kind: Pod
-    result: pass
-  - policy: disallow-privileged
-    rule: privileged-containers
-    resources:
-      - privileged-pod
+    resources: [privileged-pod]
     kind: Pod
     result: fail
+  - policy: disallow-host-namespaces
+    rule: host-namespaces
+    resources: [bad-host-network]
+    kind: Pod
+    result: fail
+  - policy: disallow-host-path
+    rule: host-path
+    resources: [bad-host-path]
+    kind: Pod
+    result: fail
+  - policy: require-run-as-nonroot
+    rule: run-as-nonroot
+    resources: [bad-root]
+    kind: Pod
+    result: fail
+  - policy: disallow-privileged
+    rule: privileged-containers
+    resources: [good-pod]
+    kind: Pod
+    result: pass
+  - policy: disallow-host-namespaces
+    rule: host-namespaces
+    resources: [good-pod]
+    kind: Pod
+    result: pass
+  - policy: disallow-host-path
+    rule: host-path
+    resources: [good-pod]
+    kind: Pod
+    result: pass
+  - policy: require-run-as-nonroot
+    rule: run-as-nonroot
+    resources: [good-pod]
+    kind: Pod
+    result: pass
